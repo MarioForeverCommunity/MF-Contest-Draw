@@ -14,7 +14,7 @@ Begin VB.Form Form1
    ScaleHeight     =   7155
    ScaleWidth      =   13230
    StartUpPosition =   3  '窗口缺省
-   Begin VB.CommandButton Command4 
+   Begin VB.CommandButton CommandUndo 
       BackColor       =   &H0079FF87&
       Caption         =   "撤销"
       Enabled         =   0   'False
@@ -35,7 +35,7 @@ Begin VB.Form Form1
       Top             =   5640
       Width           =   1500
    End
-   Begin VB.CommandButton Command3 
+   Begin VB.CommandButton CommandImport 
       BackColor       =   &H0057FFE1&
       Caption         =   "导入名单"
       BeginProperty Font 
@@ -85,7 +85,7 @@ Begin VB.Form Form1
       Top             =   2400
       Width           =   10815
    End
-   Begin VB.CommandButton Command2 
+   Begin VB.CommandButton CommandStop 
       BackColor       =   &H0079FF87&
       Caption         =   "停止"
       BeginProperty Font 
@@ -104,7 +104,7 @@ Begin VB.Form Form1
       Top             =   4560
       Width           =   1500
    End
-   Begin VB.CommandButton Command1 
+   Begin VB.CommandButton CommandStart 
       BackColor       =   &H0079FF87&
       Caption         =   "开始"
       BeginProperty Font 
@@ -206,7 +206,7 @@ Begin VB.Form Form1
       Top             =   6540
       Width           =   1215
    End
-   Begin VB.Label Label5 
+   Begin VB.Label LabelID 
       BackStyle       =   0  'Transparent
       Caption         =   "ID"
       BeginProperty Font 
@@ -218,13 +218,13 @@ Begin VB.Form Form1
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Height          =   855
+      Height          =   975
       Left            =   6360
       TabIndex        =   6
       Top             =   1200
       Width           =   6375
    End
-   Begin VB.Label Label4 
+   Begin VB.Label LabelTitle 
       Alignment       =   2  'Center
       BackStyle       =   0  'Transparent
       Caption         =   "Mario Worker杯抽签程序"
@@ -273,7 +273,7 @@ Begin VB.Form Form1
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Height          =   855
+      Height          =   975
       Left            =   360
       TabIndex        =   2
       Top             =   1200
@@ -322,13 +322,13 @@ Dim pick(1 To 100) As String
 Dim tmp, num, current As Integer
 Dim o, r As Integer, p, q As Long
 
-Private Sub Command1_Click()
+Private Sub CommandStart_Click()
     Check1.Enabled = False
     Timer1.Enabled = True
-    Command1.Enabled = False
-    Command2.Enabled = True
-    Command3.Enabled = False
-    Command4.Enabled = False
+    CommandStart.Enabled = False
+    CommandStop.Enabled = True
+    CommandImport.Enabled = False
+    CommandUndo.Enabled = False
     Label2.Caption = "正在抽:" + a(current + 1)
     wmp.URL = bgmusic
     wmp.settings.volume = 100
@@ -337,21 +337,21 @@ Private Sub Command1_Click()
     wmp.Controls.play
 End Sub
 
-Private Sub Command2_Click()
+Private Sub CommandStop_Click()
     p = 1
     wmp.settings.volume = 0
     wmp.settings.mute = True
     wmp.Controls.stop
-    Command2.Enabled = False
-    Command1.Enabled = True
-    Command3.Enabled = True
-    Command4.Enabled = True
+    CommandStop.Enabled = False
+    CommandStart.Enabled = True
+    CommandImport.Enabled = True
+    CommandUndo.Enabled = True
     Timer1.Enabled = False
     Randomize
     tmp = Int(Rnd * (num)) + 1
     current = current + 1
     pick(current) = b(tmp)
-    Label5.Caption = b(tmp)
+    LabelID.Caption = b(tmp)
     List2.AddItem a(current) & ": " & b(tmp)
     If Check1.Value = 1 Then
         For i = 1 To num
@@ -368,10 +368,10 @@ Private Sub Command2_Click()
         num = 0
         current = current + 1
         List2.AddItem a(current) & ": " & b(1)
-        Command1.Enabled = False: Command2.Enabled = False: Command4.Enabled = True
+        CommandStart.Enabled = False: CommandStop.Enabled = False: CommandUndo.Enabled = True
         pick(current) = b(1)
         List1.Clear
-        Label5.Caption = "抽取结束"
+        LabelID.Caption = "抽取结束"
         Label2.Caption = "正在抽:"
         exporter = MsgBox("是否导出结果？", vbYesNo)
 1
@@ -391,8 +391,8 @@ Private Sub Command2_Click()
         End If
     End If
     If Check1.Value = 0 And current = num Then
-        Command1.Enabled = False: Command2.Enabled = False: Command4.Enabled = True
-        Label5.Caption = "抽取结束"
+        CommandStart.Enabled = False: CommandStop.Enabled = False: CommandUndo.Enabled = True
+        LabelID.Caption = "抽取结束"
         Label2.Caption = "正在抽:"
         exporter = MsgBox("是否导出结果？", vbYesNo)
 2
@@ -413,8 +413,8 @@ Private Sub Command2_Click()
     End If
 End Sub
 
-Private Sub Command4_Click()
-    Command1.Enabled = True
+Private Sub CommandUndo_Click()
+    CommandStart.Enabled = True
     List2.RemoveItem List2.ListCount - 1
     r = 1
     If Check1.Value = 1 Then
@@ -430,10 +430,10 @@ Private Sub Command4_Click()
         b(num) = pick(current)
         current = current - 1
     End If
-    If current = 0 Then Command4.Enabled = False
+    If current = 0 Then CommandUndo.Enabled = False
 End Sub
 
-Private Sub Command3_Click()
+Private Sub CommandImport_Click()
     Dim l As String, m, n As Integer
     location = TxtLocation.Text
     If r = 1 Then
@@ -444,17 +444,17 @@ Private Sub Command3_Click()
             num = 0: tmp = 1: current = 0
             If Dir(location) = "" Then
                 MsgBox "文件不存在！", vbOKOnly, "警告"
-                Label4.Caption = "Mario Worker杯抽签程序"
+                LabelTitle.Caption = "Mario Worker杯抽签程序"
                 q = 1
                 r = 0
                 TxtLocation.Text = App.Path & "\namelist" & q & ".txt"
-                Command1.Enabled = False: Command2.Enabled = False
+                CommandStart.Enabled = False: CommandStop.Enabled = False
             Else
                 Open location For Input As #1
                 Do While Not EOF(1)
                     Input #1, l
                     If m = 0 And Mid(l, 1, 5) <> "Order" And Mid(l, 1, 5) <> "order" Then
-                        Label4.Caption = l
+                        LabelTitle.Caption = l
                     ElseIf m = 0 And (Mid(l, 1, 5) = "Order" Or Mid(l, 1, 5) = "order") Then
                         m = 1: n = 1
                     ElseIf m = 1 And Mid(l, 1, 2) <> "id" And Mid(l, 1, 2) <> "ID" Then
@@ -465,7 +465,7 @@ Private Sub Command3_Click()
                         b(n) = l:  n = n + 1
                     End If
                     Label2.Caption = "正在抽:"
-                    Label5.Caption = ""
+                    LabelID.Caption = ""
                 Loop
                 For k = 1 To num
                     If b(k) = "" Then b(k) = "<empty>"
@@ -476,24 +476,25 @@ Private Sub Command3_Click()
                 Close #1
                 q = q + 1
                 TxtLocation.Text = App.Path & "\namelist" & q & ".txt"
-                Command1.Enabled = True: Check1.Enabled = True: Timer1.Enabled = False: Command4.Enabled = False
+                CommandStart.Enabled = True: Check1.Enabled = True: Timer1.Enabled = False: CommandUndo.Enabled = False
             End If
         End If
     ElseIf r = 0 Then
         List1.Clear
         List2.Clear
+        num = 0: tmp = 1: current = 0
         If Dir(location) = "" Then
             MsgBox "文件不存在！", vbOKOnly, "警告"
-            Label4.Caption = "Mario Worker杯抽签程序"
+            LabelTitle.Caption = "Mario Worker杯抽签程序"
             q = 1
             TxtLocation.Text = App.Path & "\namelist" & q & ".txt"
-            Command1.Enabled = False: Command2.Enabled = False
+            CommandStart.Enabled = False: CommandStop.Enabled = False
         Else
             Open location For Input As #1
             Do While Not EOF(1)
                 Input #1, l
                 If m = 0 And Mid(l, 1, 5) <> "Order" And Mid(l, 1, 5) <> "order" Then
-                    Label4.Caption = l
+                    LabelTitle.Caption = l
                 ElseIf m = 0 And (Mid(l, 1, 5) = "Order" Or Mid(l, 1, 5) = "order") Then
                     m = 1: n = 1
                 ElseIf m = 1 And Mid(l, 1, 2) <> "id" And Mid(l, 1, 2) <> "ID" Then
@@ -504,7 +505,7 @@ Private Sub Command3_Click()
                     b(n) = l:  n = n + 1
                 End If
                 Label2.Caption = "正在抽:"
-                Label5.Caption = ""
+                LabelID.Caption = ""
             Loop
             For k = 1 To num
                 If b(k) = "" Then b(k) = "<empty>"
@@ -516,7 +517,7 @@ Private Sub Command3_Click()
             r = 1
             q = q + 1
             TxtLocation.Text = App.Path & "\namelist" & q & ".txt"
-            Command1.Enabled = True: Check1.Enabled = True: Timer1.Enabled = False: Command4.Enabled = False
+            CommandStart.Enabled = True: Check1.Enabled = True: Timer1.Enabled = False: CommandUndo.Enabled = False
         End If
     End If
 End Sub
@@ -525,8 +526,8 @@ Private Sub Form_Load()
     q = 1
     r = 0
     TxtLocation.Text = App.Path & "\namelist" & q & ".txt"
-    Command1.Enabled = False: Command2.Enabled = False
-    Label5.Caption = ""
+    CommandStart.Enabled = False: CommandStop.Enabled = False
+    LabelID.Caption = ""
     Check1.Value = 1
     wmp.URL = App.Path & "\bgmusic.mp3"
     wmp.Controls.stop
@@ -537,7 +538,7 @@ Private Sub Timer1_Timer()
     Do While tmp = tmp2
         Randomize
         tmp = Int(Rnd * (num)) + 1
-        Label5.Caption = b(tmp)
+        LabelID.Caption = b(tmp)
     Loop
     tmp2 = tmp
 End Sub
@@ -549,5 +550,5 @@ Private Sub wmp_PlayStateChange(ByVal NewState As Long)
 End Sub
 
 Private Sub Form1_Resize()
-    Label4.Width = Me.Width / 2
+    LabelTitle.Width = Me.Width / 2
 End Sub
