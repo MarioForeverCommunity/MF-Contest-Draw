@@ -15,7 +15,7 @@ Begin VB.Form Form1
    ScaleWidth      =   13230
    StartUpPosition =   3  '窗口缺省
    Begin VB.CommandButton CommandUndo 
-      BackColor       =   &H0079FF87&
+      BackColor       =   &H0057FFE1&
       Caption         =   "撤销"
       Enabled         =   0   'False
       BeginProperty Font 
@@ -29,14 +29,12 @@ Begin VB.Form Form1
       EndProperty
       Height          =   540
       Left            =   11400
-      MaskColor       =   &H0079FF87&
       Style           =   1  'Graphical
       TabIndex        =   13
       Top             =   5640
       Width           =   1500
    End
    Begin VB.CommandButton CommandImport 
-      BackColor       =   &H0057FFE1&
       Caption         =   "导入名单"
       BeginProperty Font 
          Name            =   "微软雅黑"
@@ -68,7 +66,7 @@ Begin VB.Form Form1
       Left            =   12720
       Top             =   120
    End
-   Begin VB.TextBox TxtLocation 
+   Begin VB.TextBox TxtPath 
       BeginProperty Font 
          Name            =   "微软雅黑"
          Size            =   14.25
@@ -86,7 +84,7 @@ Begin VB.Form Form1
       Width           =   10815
    End
    Begin VB.CommandButton CommandStop 
-      BackColor       =   &H0079FF87&
+      BackColor       =   &H008080FF&
       Caption         =   "停止"
       BeginProperty Font 
          Name            =   "微软雅黑"
@@ -211,18 +209,18 @@ Begin VB.Form Form1
       Caption         =   "ID"
       BeginProperty Font 
          Name            =   "微软雅黑"
-         Size            =   36
+         Size            =   32.25
          Charset         =   134
-         Weight          =   700
+         Weight          =   400
          Underline       =   0   'False
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
       Height          =   975
-      Left            =   6360
+      Left            =   5880
       TabIndex        =   6
       Top             =   1200
-      Width           =   6375
+      Width           =   7095
    End
    Begin VB.Label LabelTitle 
       Alignment       =   2  'Center
@@ -261,14 +259,14 @@ Begin VB.Form Form1
       Top             =   3000
       Width           =   1815
    End
-   Begin VB.Label Label2 
+   Begin VB.Label LabelCode 
       BackStyle       =   0  'Transparent
-      Caption         =   "正在抽："
+      Caption         =   "正在抽:"
       BeginProperty Font 
          Name            =   "微软雅黑"
-         Size            =   36
+         Size            =   32.25
          Charset         =   134
-         Weight          =   700
+         Weight          =   400
          Underline       =   0   'False
          Italic          =   0   'False
          Strikethrough   =   0   'False
@@ -329,7 +327,7 @@ Private Sub CommandStart_Click()
     CommandStop.Enabled = True
     CommandImport.Enabled = False
     CommandUndo.Enabled = False
-    Label2.Caption = "正在抽:" + a(current + 1)
+    LabelCode.Caption = "正在抽:" + a(current + 1)
     wmp.URL = bgmusic
     wmp.settings.volume = 100
     wmp.settings.autoStart = True
@@ -372,7 +370,7 @@ Private Sub CommandStop_Click()
         pick(current) = b(1)
         List1.Clear
         LabelID.Caption = "抽取结束"
-        Label2.Caption = "正在抽:"
+        LabelCode.Caption = "正在抽:"
         exporter = MsgBox("是否导出结果？", vbYesNo)
 1
         results = App.Path & "\results" & p & ".txt"
@@ -393,7 +391,7 @@ Private Sub CommandStop_Click()
     If Check1.Value = 0 And current = num Then
         CommandStart.Enabled = False: CommandStop.Enabled = False: CommandUndo.Enabled = True
         LabelID.Caption = "抽取结束"
-        Label2.Caption = "正在抽:"
+        LabelCode.Caption = "正在抽:"
         exporter = MsgBox("是否导出结果？", vbYesNo)
 2
         results = App.Path & "\results" & p & ".txt"
@@ -435,22 +433,22 @@ End Sub
 
 Private Sub CommandImport_Click()
     Dim l As String, m, n As Integer
-    location = TxtLocation.Text
+    listpath = TxtPath.Text
     If r = 1 Then
         aaa = MsgBox("是否导入名单？", vbYesNo)
         If aaa = vbYes Then
             List1.Clear
             List2.Clear
             num = 0: tmp = 1: current = 0
-            If Dir(location) = "" Then
+            If Dir(listpath) = "" Then
                 MsgBox "文件不存在！", vbOKOnly, "警告"
                 LabelTitle.Caption = "Mario Worker杯抽签程序"
                 q = 1
                 r = 0
-                TxtLocation.Text = App.Path & "\namelist" & q & ".txt"
-                CommandStart.Enabled = False: CommandStop.Enabled = False
+                TxtPath.Text = App.Path & "\namelist" & q & ".txt"
+                CommandStart.Enabled = False: CommandStop.Enabled = False: CommandUndo.Enabled = False
             Else
-                Open location For Input As #1
+                Open listpath For Input As #1
                 Do While Not EOF(1)
                     Input #1, l
                     If m = 0 And Mid(l, 1, 5) <> "Order" And Mid(l, 1, 5) <> "order" Then
@@ -464,7 +462,7 @@ Private Sub CommandImport_Click()
                     ElseIf m = 2 Then
                         b(n) = l:  n = n + 1
                     End If
-                    Label2.Caption = "正在抽:"
+                    LabelCode.Caption = "正在抽:"
                     LabelID.Caption = ""
                 Loop
                 For k = 1 To num
@@ -475,7 +473,7 @@ Private Sub CommandImport_Click()
                 Next j
                 Close #1
                 q = q + 1
-                TxtLocation.Text = App.Path & "\namelist" & q & ".txt"
+                TxtPath.Text = App.Path & "\namelist" & q & ".txt"
                 CommandStart.Enabled = True: Check1.Enabled = True: Timer1.Enabled = False: CommandUndo.Enabled = False
             End If
         End If
@@ -483,14 +481,14 @@ Private Sub CommandImport_Click()
         List1.Clear
         List2.Clear
         num = 0: tmp = 1: current = 0
-        If Dir(location) = "" Then
+        If Dir(listpath) = "" Then
             MsgBox "文件不存在！", vbOKOnly, "警告"
             LabelTitle.Caption = "Mario Worker杯抽签程序"
             q = 1
-            TxtLocation.Text = App.Path & "\namelist" & q & ".txt"
-            CommandStart.Enabled = False: CommandStop.Enabled = False
+            TxtPath.Text = App.Path & "\namelist" & q & ".txt"
+            CommandStart.Enabled = False: CommandStop.Enabled = False: CommandUndo.Enabled = False
         Else
-            Open location For Input As #1
+            Open listpath For Input As #1
             Do While Not EOF(1)
                 Input #1, l
                 If m = 0 And Mid(l, 1, 5) <> "Order" And Mid(l, 1, 5) <> "order" Then
@@ -504,7 +502,7 @@ Private Sub CommandImport_Click()
                 ElseIf m = 2 Then
                     b(n) = l:  n = n + 1
                 End If
-                Label2.Caption = "正在抽:"
+                LabelCode.Caption = "正在抽:"
                 LabelID.Caption = ""
             Loop
             For k = 1 To num
@@ -516,7 +514,7 @@ Private Sub CommandImport_Click()
             Close #1
             r = 1
             q = q + 1
-            TxtLocation.Text = App.Path & "\namelist" & q & ".txt"
+            TxtPath.Text = App.Path & "\namelist" & q & ".txt"
             CommandStart.Enabled = True: Check1.Enabled = True: Timer1.Enabled = False: CommandUndo.Enabled = False
         End If
     End If
@@ -525,7 +523,7 @@ End Sub
 Private Sub Form_Load()
     q = 1
     r = 0
-    TxtLocation.Text = App.Path & "\namelist" & q & ".txt"
+    TxtPath.Text = App.Path & "\namelist" & q & ".txt"
     CommandStart.Enabled = False: CommandStop.Enabled = False
     LabelID.Caption = ""
     Check1.Value = 1
