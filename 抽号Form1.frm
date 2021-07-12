@@ -14,6 +14,15 @@ Begin VB.Form Form1
    ScaleHeight     =   7155
    ScaleWidth      =   13230
    StartUpPosition =   3  '窗口缺省
+   Begin VB.CheckBox Check2 
+      Caption         =   "清空已抽"
+      Height          =   180
+      Left            =   11400
+      MaskColor       =   &H00FFFFFF&
+      TabIndex        =   15
+      Top             =   6120
+      Width           =   180
+   End
    Begin VB.CommandButton CommandUndo 
       BackColor       =   &H0057FFE1&
       Caption         =   "撤销"
@@ -31,7 +40,7 @@ Begin VB.Form Form1
       Left            =   11400
       Style           =   1  'Graphical
       TabIndex        =   13
-      Top             =   5640
+      Top             =   5160
       Width           =   1500
    End
    Begin VB.CommandButton CommandImport 
@@ -99,7 +108,7 @@ Begin VB.Form Form1
       Left            =   11400
       Style           =   1  'Graphical
       TabIndex        =   8
-      Top             =   4560
+      Top             =   4320
       Width           =   1500
    End
    Begin VB.CommandButton CommandStart 
@@ -152,6 +161,24 @@ Begin VB.Form Form1
       TabIndex        =   0
       Top             =   3480
       Width           =   5175
+   End
+   Begin VB.Label Label2 
+      BackStyle       =   0  'Transparent
+      Caption         =   "清空已抽"
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   12
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   495
+      Left            =   11760
+      TabIndex        =   16
+      Top             =   6040
+      Width           =   1215
    End
    Begin WMPLibCtl.WindowsMediaPlayer wmp 
       Height          =   495
@@ -437,8 +464,10 @@ Private Sub CommandImport_Click()
     If r = 1 Then
         aaa = MsgBox("是否导入名单？", vbYesNo)
         If aaa = vbYes Then
+            If Check2.Value = 1 Then
+                List2.Clear
+            End If
             List1.Clear
-            List2.Clear
             num = 0: tmp = 1: current = 0
             If Dir(listpath) = "" Then
                 MsgBox "文件不存在！", vbOKOnly, "警告"
@@ -478,8 +507,10 @@ Private Sub CommandImport_Click()
             End If
         End If
     ElseIf r = 0 Then
+        If Check2.Value = 1 Then
+            List2.Clear
+        End If
         List1.Clear
-        List2.Clear
         num = 0: tmp = 1: current = 0
         If Dir(listpath) = "" Then
             MsgBox "文件不存在！", vbOKOnly, "警告"
@@ -550,3 +581,4 @@ End Sub
 Private Sub Form1_Resize()
     LabelTitle.Width = Me.Width / 2
 End Sub
+
