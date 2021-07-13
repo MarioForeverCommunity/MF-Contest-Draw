@@ -471,6 +471,7 @@ Private Sub CommandImport_Click()
             num = 0: tmp = 1: current = 0
             If Dir(listpath) = "" Then
                 MsgBox "文件不存在！", vbOKOnly, "警告"
+                Form1.Caption = "Mario Worker杯抽签程序"
                 LabelTitle.Caption = "Mario Worker杯抽签程序"
                 q = 1
                 r = 0
@@ -481,6 +482,7 @@ Private Sub CommandImport_Click()
                 Do While Not EOF(1)
                     Input #1, l
                     If m = 0 And Mid(l, 1, 5) <> "Order" And Mid(l, 1, 5) <> "order" Then
+                        Form1.Caption = l
                         LabelTitle.Caption = l
                     ElseIf m = 0 And (Mid(l, 1, 5) = "Order" Or Mid(l, 1, 5) = "order") Then
                         m = 1: n = 1
@@ -514,6 +516,7 @@ Private Sub CommandImport_Click()
         num = 0: tmp = 1: current = 0
         If Dir(listpath) = "" Then
             MsgBox "文件不存在！", vbOKOnly, "警告"
+            Form1.Caption = "Mario Worker杯抽签程序"
             LabelTitle.Caption = "Mario Worker杯抽签程序"
             q = 1
             TxtPath.Text = App.Path & "\namelist" & q & ".txt"
@@ -523,6 +526,7 @@ Private Sub CommandImport_Click()
             Do While Not EOF(1)
                 Input #1, l
                 If m = 0 And Mid(l, 1, 5) <> "Order" And Mid(l, 1, 5) <> "order" Then
+                    Form1.Caption = l
                     LabelTitle.Caption = l
                 ElseIf m = 0 And (Mid(l, 1, 5) = "Order" Or Mid(l, 1, 5) = "order") Then
                     m = 1: n = 1
