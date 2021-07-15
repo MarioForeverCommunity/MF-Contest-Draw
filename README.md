@@ -1,6 +1,6 @@
-# Mario Worker Cup 抽签程序
+# PK!MF 抽签程序
 
-Mario Worker 杯抽签程序，拥有满足 MW 杯抽签需求的所有功能。
+PK!MF 抽签程序，拥有满足 PK!MF 抽签需求的所有功能。
 
 此程序采用 Visual Basic 6.0 编写。
 

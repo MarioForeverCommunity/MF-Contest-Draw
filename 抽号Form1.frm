@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{6BF52A50-394A-11D3-B153-00C04F79FAA6}#1.0#0"; "wmp.dll"
 Begin VB.Form Form1 
    BorderStyle     =   1  'Fixed Single
-   Caption         =   "Mario Worker±≠≥È«©≥Ã–Ú"
+   Caption         =   "PK!MF≥È«©≥Ã–Ú"
    ClientHeight    =   7155
    ClientLeft      =   45
    ClientTop       =   390
@@ -252,7 +252,7 @@ Begin VB.Form Form1
    Begin VB.Label LabelTitle 
       Alignment       =   2  'Center
       BackStyle       =   0  'Transparent
-      Caption         =   "Mario Worker±≠≥È«©≥Ã–Ú"
+      Caption         =   "PK!MF≥È«©≥Ã–Ú"
       BeginProperty Font 
          Name            =   "Œ¢»Ì—≈∫⁄"
          Size            =   30
@@ -325,14 +325,14 @@ Begin VB.Form Form1
    Begin VB.Image Image1 
       Height          =   9000
       Left            =   0
-      Picture         =   "≥È∫≈Form1.frx":1CCA
+      Picture         =   "≥È∫≈Form1.frx":25CA
       Top             =   0
       Width           =   12000
    End
    Begin VB.Image Image2 
       Height          =   9000
       Left            =   12000
-      Picture         =   "≥È∫≈Form1.frx":6636
+      Picture         =   "≥È∫≈Form1.frx":6F36
       Top             =   0
       Width           =   12000
    End
@@ -471,8 +471,8 @@ Private Sub CommandImport_Click()
             num = 0: tmp = 1: current = 0
             If Dir(listpath) = "" Then
                 MsgBox "Œƒº˛≤ª¥Ê‘⁄£°", vbOKOnly, "æØ∏Ê"
-                Form1.Caption = "Mario Worker±≠≥È«©≥Ã–Ú"
-                LabelTitle.Caption = "Mario Worker±≠≥È«©≥Ã–Ú"
+                Form1.Caption = "PK!MF≥È«©≥Ã–Ú"
+                LabelTitle.Caption = "PK!MF≥È«©≥Ã–Ú"
                 q = 1
                 r = 0
                 TxtPath.Text = App.Path & "\namelist" & q & ".txt"
@@ -516,8 +516,8 @@ Private Sub CommandImport_Click()
         num = 0: tmp = 1: current = 0
         If Dir(listpath) = "" Then
             MsgBox "Œƒº˛≤ª¥Ê‘⁄£°", vbOKOnly, "æØ∏Ê"
-            Form1.Caption = "Mario Worker±≠≥È«©≥Ã–Ú"
-            LabelTitle.Caption = "Mario Worker±≠≥È«©≥Ã–Ú"
+            Form1.Caption = "PK!MF≥È«©≥Ã–Ú"
+            LabelTitle.Caption = "PK!MF≥È«©≥Ã–Ú"
             q = 1
             TxtPath.Text = App.Path & "\namelist" & q & ".txt"
             CommandStart.Enabled = False: CommandStop.Enabled = False: CommandUndo.Enabled = False
