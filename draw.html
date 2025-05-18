@@ -128,7 +128,7 @@
       currentBatchIndex = 0;
       loadBatch(currentBatchIndex);
       nextBatchBtn.disabled = batches.length <= 1;
-      exportBtn.disabled = false;
+      exportBtn.disabled = allAssigned.length === 0;
       tbody.innerHTML = '';
       resultTable.style.display = 'none';
     };
