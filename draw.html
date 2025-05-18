@@ -1,0 +1,381 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>抽签程序网页版</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+  h1 { text-align: center; }
+  #fileInput, #musicInput { margin-top: 10px; display: block; }
+  #orderList, #candidateList {
+    border: 1px solid #ccc; padding: 8px; height: 120px; overflow-y: auto; margin-top: 5px;
+    background: #f9f9f9; white-space: pre-wrap;
+  }
+  #drawArea { margin-top: 20px; text-align: center; }
+  #currentDraw { font-size: 24px; margin: 15px 0; min-height: 30px; font-weight: bold; }
+  button { margin: 5px; padding: 8px 12px; font-size: 16px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1 id="pageTitle">抽签程序</h1>
+
+<label>选择名单文件 (.txt)：</label>
+<input type="file" id="fileInput" accept=".txt" />
+<button id="loadBtn">加载名单文件</button>
+<button id="nextBatchBtn" disabled>下一批</button>
+<button id="exportBtn" disabled>导出结果文本</button>
+<br />
+<label style="margin-top:15px;">选择背景音乐 (可选)：</label>
+<input type="file" id="bgmInput" accept="audio/*" />
+<audio id="bgmPlayer" loop></audio>
+
+<div style="display: flex; gap: 20px; margin-top: 20px;">
+  <div style="flex: 1;">
+    <h3>待抽顺序</h3>
+    <div id="orderList"></div>
+  </div>
+  <div style="flex: 1;">
+    <h3>待抽名单</h3>
+    <div id="candidateList"></div>
+  </div>
+</div>
+
+<div id="drawArea" style="display:none;">
+  <div>当前抽取：<span id="currentOrder"></span></div>
+  <div id="currentDraw"></div>
+  <button id="startStopBtn">开始抽签</button>
+  <button id="undoBtn" disabled>撤销</button>
+</div>
+
+<table id="resultTable" style="display:none;">
+  <thead>
+    <tr><th>序号</th><th>抽签项</th><th>抽中人员</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const musicInput = document.getElementById('musicInput');
+  const loadBtn = document.getElementById('loadBtn');
+  const nextBatchBtn = document.getElementById('nextBatchBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const orderListDiv = document.getElementById('orderList');
+  const candidateListDiv = document.getElementById('candidateList');
+  const drawArea = document.getElementById('drawArea');
+  const currentOrderSpan = document.getElementById('currentOrder');
+  const currentDrawDiv = document.getElementById('currentDraw');
+  const startStopBtn = document.getElementById('startStopBtn');
+  const undoBtn = document.getElementById('undoBtn');
+  const resultTable = document.getElementById('resultTable');
+  const tbody = resultTable.querySelector('tbody');
+  const pageTitle = document.getElementById('pageTitle');
+  const bgmInput = document.getElementById('bgmInput');
+  const bgmPlayer = document.getElementById('bgmPlayer');
+
+  let batches = [];
+  let baseTitle = '';
+  let currentBatchIndex = 0;
+
+  let orderList = [];
+  let candidateList = [];
+  let candidatePool = [];
+  let assigned = [];
+  let allAssigned = [];
+  let drawIndex = 0;
+
+  let rolling = false;
+  let intervalId = null;
+
+  window.onload = () => {
+    nextBatchBtn.disabled = true;
+    exportBtn.disabled = true;
+  };
+
+  bgmInput.onchange = () => {
+    const bgmFile = bgmInput.files[0];
+    if (bgmFile) {
+      const url = URL.createObjectURL(bgmFile);
+      bgmPlayer.src = url;
+    } else {
+      bgmPlayer.src = '';
+    }
+  };
+
+  // 加载名单文件
+  loadBtn.onclick = () => {
+    const file = fileInput.files[0];
+    if (!file) {
+      alert('请选择名单文件');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      parseFile(reader.result);
+      if (batches.length === 0) {
+        alert('未找到有效批次');
+        return;
+      }
+      allAssigned.length = 0;  // 清空所有记录
+      assigned.length = 0;
+      drawIndex = 0;
+      currentBatchIndex = 0;
+      loadBatch(currentBatchIndex);
+      nextBatchBtn.disabled = batches.length <= 1;
+      exportBtn.disabled = false;
+      tbody.innerHTML = '';
+      resultTable.style.display = 'none';
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+
+  // 解析名单文本
+  function parseFile(text) {
+    batches = [];
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+
+    if (lines.length === 0) {
+      alert('文件为空');
+      return;
+    }
+
+    baseTitle = lines[0];
+
+    let batchIndexes = [];
+    for(let i = 1; i < lines.length; i++) {
+      if (/^==[^=]+==$/.test(lines[i])) {
+        batchIndexes.push(i);
+      }
+    }
+
+    if (batchIndexes.length === 0) {
+      alert('未找到批次标题（格式: == 批次标题 ==）');
+      return;
+    }
+
+    for(let i = 0; i < batchIndexes.length; i++) {
+      const startIdx = batchIndexes[i];
+      const endIdx = i + 1 < batchIndexes.length ? batchIndexes[i + 1] : lines.length;
+      const batchLines = lines.slice(startIdx, endIdx);
+
+      const title = batchLines[0].replace(/^==\s*|\s*==$/g, '');
+
+      const orderIdx = batchLines.findIndex(l => l.toLowerCase() === 'order');
+      const idIdx = batchLines.findIndex(l => l.toLowerCase() === 'id');
+
+      if (orderIdx === -1 || idIdx === -1 || orderIdx >= idIdx) {
+        continue;
+      }
+
+      const orderListBatch = batchLines.slice(orderIdx + 1, idIdx);
+      const candidateListBatch = batchLines.slice(idIdx + 1);
+
+      if (orderListBatch.length === 0 || candidateListBatch.length === 0) continue;
+
+      batches.push({title, orderList: orderListBatch, candidateList: candidateListBatch});
+    }
+  }
+
+  // 加载某批次数据
+  function loadBatch(index) {
+    if (index < 0 || index >= batches.length) return;
+    const batch = batches[index];
+    orderList = batch.orderList.slice();
+    candidateList = batch.candidateList.slice();
+    candidatePool = candidateList.slice();
+    assigned = [];
+    drawIndex = 0;
+    rolling = false;
+    clearInterval(intervalId);
+    intervalId = null;
+
+    pageTitle.textContent = `${baseTitle} - ${batch.title}`;
+    orderListDiv.textContent = orderList.join('\n');
+    candidateListDiv.textContent = candidateList.join('\n');
+    currentDrawDiv.textContent = '';
+    updateCurrentOrder();
+
+    drawArea.style.display = 'block';
+    startStopBtn.disabled = false;
+    startStopBtn.textContent = '开始抽签';
+    undoBtn.disabled = true;
+
+    tbody.innerHTML = '';
+    resultTable.style.display = 'none';
+  }
+
+  function updateCurrentOrder() {
+    currentOrderSpan.textContent = drawIndex < orderList.length ? orderList[drawIndex] : '本批抽完';
+  }
+
+  startStopBtn.onclick = () => {
+    if (!rolling) {
+      if (drawIndex >= orderList.length) {
+        alert('本批已抽完');
+        return;
+      }
+      if (candidatePool.length === 0) {
+        alert('本批待抽名单为空，无法继续抽签');
+        return;
+      }
+      rolling = true;
+      startStopBtn.textContent = '停止抽签';
+      intervalId = setInterval(() => {
+        const idx = Math.floor(Math.random() * candidatePool.length);
+        currentDrawDiv.textContent = candidatePool[idx];
+      }, 100);
+      // 播放背景音乐
+      if (bgmPlayer.src) {
+        bgmPlayer.currentTime = 0;
+        bgmPlayer.play().catch(err => console.warn("BGM 播放失败:", err));
+      }
+    } else {
+      rolling = false;
+      startStopBtn.textContent = '开始抽签';
+      clearInterval(intervalId);
+
+      const selected = currentDrawDiv.textContent;
+      assigned.push({order: orderList[drawIndex], candidate: selected});
+      allAssigned.push({order: orderList[drawIndex], candidate: selected});
+
+      const removeIdx = candidatePool.indexOf(selected);
+      if (removeIdx !== -1) candidatePool.splice(removeIdx, 1);
+
+      orderListDiv.textContent = orderList.slice(drawIndex + 1).join('\n');
+      candidateListDiv.textContent = candidatePool.join('\n');
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${tbody.children.length + 1}</td><td>${orderList[drawIndex]}</td><td>${selected}</td>`;
+      tbody.appendChild(tr);
+      resultTable.style.display = 'table';
+
+      drawIndex++;
+      updateCurrentOrder();
+
+      undoBtn.disabled = false;
+
+      // 暂停音乐
+      if (!bgmPlayer.paused) {
+        bgmPlayer.pause();
+      }
+
+      // 检查是否只剩最后一项
+      if (drawIndex === orderList.length - 1 && candidatePool.length === 1) {
+        const finalOrder = orderList[drawIndex];
+        const finalCandidate = candidatePool[0];
+
+        assigned.push({order: finalOrder, candidate: finalCandidate});
+        allAssigned.push({order: finalOrder, candidate: finalCandidate});
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${drawIndex + 1}</td><td>${finalOrder}</td><td>${finalCandidate}</td>`;
+        tbody.appendChild(tr);
+        resultTable.style.display = 'table';
+
+        candidatePool = [];
+        drawIndex++;
+        updateCurrentOrder();
+
+        orderListDiv.textContent = '';
+        candidateListDiv.textContent = '';
+
+        alert('本批抽完！');
+        startStopBtn.disabled = true;
+        undoBtn.disabled = false;
+        exportBtn.disabled = false;
+      }
+
+      if (drawIndex >= orderList.length && candidatePool.length > 0) {
+        alert('本批抽完！');
+        startStopBtn.disabled = true;
+      }
+    }
+  };
+
+  undoBtn.onclick = () => {
+    if (rolling) {
+      alert('正在抽签中，无法撤销');
+      return;
+    }
+    if (assigned.length === 0) {
+      alert('没有可以撤销的抽签');
+      return;
+    }
+
+    // 撤销最后一次抽签
+    const last = assigned.pop();
+
+    // 从 allAssigned 中移除对应项
+    for (let i = allAssigned.length - 1; i >= 0; i--) {
+      if (
+        allAssigned[i].order === last.order &&
+        allAssigned[i].candidate === last.candidate
+      ) {
+        allAssigned.splice(i, 1);
+        break;
+      }
+    }
+
+    // 将候选人放回候选池（末尾即可）
+    candidatePool.push(last.candidate);
+
+    // 减少当前抽签索引
+    drawIndex--;
+
+    // 删除结果表最后一行
+    const lastTr = tbody.querySelector('tr:last-child');
+    if (lastTr) tbody.removeChild(lastTr);
+
+    // 更新待抽列表显示（不再更改 orderList，只用 slice 动态显示）
+    orderListDiv.textContent = orderList.slice(drawIndex).join('\n');
+    candidateListDiv.textContent = candidatePool.join('\n');
+
+    updateCurrentOrder();
+
+    startStopBtn.disabled = false;
+    undoBtn.disabled = assigned.length === 0;
+    exportBtn.disabled = allAssigned.length === 0;
+  };
+
+  nextBatchBtn.onclick = () => {
+    if (rolling) {
+      alert('正在抽签中，无法切换批次');
+      return;
+    }
+    if (currentBatchIndex + 1 >= batches.length) {
+      alert('已经是最后一批');
+      return;
+    }
+    currentBatchIndex++;
+    loadBatch(currentBatchIndex);
+  };
+
+  exportBtn.onclick = () => {
+    if (allAssigned.length === 0) {
+      alert('无抽签结果可导出');
+      return;
+    }
+    let content = '';
+    allAssigned.forEach(pair => {
+      content += `${pair.order}: ${pair.candidate}\n`;
+    });
+    const blob = new Blob([content], {type: 'text/plain;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${baseTitle}_抽签结果.txt`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+  };
+</script>
+
+</body>
+</html>
