@@ -286,6 +286,7 @@
         tbody.appendChild(tr);
         resultTable.style.display = 'table';
 
+        currentDrawDiv.textContent = finalCandidate; // 让界面上显示出最后一个被自动分配的抽签结果
         candidatePool = [];
         drawIndex++;
         updateCurrentOrder();
@@ -293,14 +294,12 @@
         orderListDiv.textContent = '';
         candidateListDiv.textContent = '';
 
-        alert('本批抽完！');
         startStopBtn.disabled = true;
         undoBtn.disabled = false;
         exportBtn.disabled = false;
       }
 
-      if (drawIndex >= orderList.length && candidatePool.length > 0) {
-        alert('本批抽完！');
+      if (drawIndex >= orderList.length) {
         startStopBtn.disabled = true;
         undoBtn.disabled = false;
         exportBtn.disabled = false;
