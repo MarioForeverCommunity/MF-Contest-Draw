@@ -199,11 +199,11 @@
     candidateList = batch.candidateList.slice();
     candidatePool = candidateList.slice();
     
-    // 如果不允许重复抽取，且待抽人数不足 orderList，则补齐 `<empty>`
+    // 如果不允许重复抽取，且待抽人数不足 orderList，则补齐 `[empty]`
     if (!allowRepeatsCheckbox.checked && candidatePool.length < orderList.length) {
       const diff = orderList.length - candidatePool.length;
       for (let i = 0; i < diff; i++) {
-        candidatePool.push('<empty>');
+        candidatePool.push('[empty]');
       }
     }
     
