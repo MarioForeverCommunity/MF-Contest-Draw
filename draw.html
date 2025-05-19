@@ -198,6 +198,15 @@
     orderList = batch.orderList.slice();
     candidateList = batch.candidateList.slice();
     candidatePool = candidateList.slice();
+    
+    // 如果不允许重复抽取，且待抽人数不足 orderList，则补齐 `<empty>`
+    if (!allowRepeatsCheckbox.checked && candidatePool.length < orderList.length) {
+      const diff = orderList.length - candidatePool.length;
+      for (let i = 0; i < diff; i++) {
+        candidatePool.push('<empty>');
+      }
+    }
+    
     assigned = [];
     drawIndex = 0;
     rolling = false;
@@ -206,7 +215,7 @@
 
     pageTitle.textContent = `${baseTitle} - ${batch.title}`;
     orderListDiv.textContent = orderList.join('\n');
-    candidateListDiv.textContent = candidateList.join('\n');
+    candidateListDiv.textContent = candidatePool.join('\n');
     currentDrawDiv.textContent = '';
     updateCurrentOrder();
 
